@@ -1,12 +1,11 @@
 """Fetch prices from CryptoCompare.com JSON API
 """
-import re
-import datetime
 import time
 import logging
 import json
-from urllib import parse
+from datetime import datetime
 from urllib import error
+from math import log10, floor
 
 from beancount.core.number import D
 from beancount.prices import source
@@ -19,9 +18,10 @@ class Source(source.Source):
 
     def get_historical_price(self, ticker, date):
         commodity, currency = ticker.split(':')
-        trade_date = datetime.datetime.combine(date, datetime.datetime.max.time())
+        trade_date = datetime.combine(date, datetime.max.time())
         ts = int(time.mktime(trade_date.timetuple()))
         url = 'https://min-api.cryptocompare.com/data/pricehistorical?fsym={}&tsyms={}&ts={}'.format(commodity, currency, ts)
+        logging.info("Fetching %s", url)
         try:
             response = net_utils.retrying_urlopen(url)
             if response is None:
@@ -31,12 +31,13 @@ class Source(source.Source):
         except error.HTTPError:
             return None
 
-        price = D(response[commodity][currency])
-        return source.SourcePrice(price, trade_date, currency)
+        price = D(response[commodity][currency]).quantize(D('1.000000000000000000'))
+        return source.SourcePrice(D('0') if price == 0 else price, trade_date, currency)
 
     def get_latest_price(self, ticker):
         commodity, currency = ticker.split(':')
         url = 'https://min-api.cryptocompare.com/data/price?fsym={}&tsyms={}'.format(commodity, currency)
+        logging.info("Fetching %s", url)
         try:
             response = net_utils.retrying_urlopen(url)
             if response is None:
@@ -45,7 +46,6 @@ class Source(source.Source):
             response = json.loads(response)
         except error.HTTPError:
             return None
-
-        price = D(response[currency])
-        td = datetime.datetime.now()
-        return source.SourcePrice(price, td, currency)
+        price = D(response[currency]).quantize(D('1.000000000000000000'))
+        trade_date = datetime.now()
+        return source.SourcePrice(D('0') if price == 0 else price, trade_date, currency)
