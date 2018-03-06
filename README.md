@@ -2,7 +2,8 @@ Additional importers for beancount plaintext accounting
 
 Installation
 ------------
-python setup.py install
+
+    python setup.py install
 
 CryptoCompare price source
 ------------------------
