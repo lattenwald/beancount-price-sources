@@ -11,8 +11,6 @@ from beancount.core.number import D
 from beancount.prices import source
 from beancount.utils import net_utils
 
-from dateutil import tz
-
 class Source(source.Source):
     "CryptoCompare API price extractor."
 
