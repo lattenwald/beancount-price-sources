@@ -1,9 +1,12 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(
     name='beancount-lattenwald-prices',
     version='1.0',
-    packages=['lattenwaldsources'],
+    packages=find_packages(),
     license='BSD',
     long_description=open('README.md').read(),
+    install_requires=[
+        'pywaves',
+    ],
 )
