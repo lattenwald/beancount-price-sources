@@ -3,6 +3,7 @@
 import time
 import logging
 import json
+from dateutil import tz,utils
 from datetime import datetime
 from urllib import error
 from math import log10, floor
@@ -16,7 +17,7 @@ class Source(source.Source):
 
     def get_historical_price(self, ticker, date):
         commodity, currency = ticker.split(':')
-        trade_date = datetime.combine(date, datetime.max.time())
+        trade_date = utils.default_tzinfo(datetime.combine(date, datetime.max.time()), tz.UTC)
         ts = int(time.mktime(trade_date.timetuple()))
         url = 'https://min-api.cryptocompare.com/data/pricehistorical?fsym={}&tsyms={}&ts={}'.format(commodity, currency, ts)
         logging.info("Fetching %s", url)
@@ -45,5 +46,5 @@ class Source(source.Source):
         except error.HTTPError:
             return None
         price = D(response[currency]).quantize(D('1.000000000000000000'))
-        trade_date = datetime.now()
+        trade_date = utils.default_tzinfo(datetime.now(), tz.gettz())
         return source.SourcePrice(D('0') if price == 0 else price, trade_date, currency)
